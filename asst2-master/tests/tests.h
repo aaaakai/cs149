@@ -507,7 +507,7 @@ class StrictDependencyTask: public IRunnable {
  */
 TestResults simpleTest(ITaskSystem* t, bool do_async) {
     int num_elements_per_task = 2;
-    int num_tasks = 3;
+    int num_tasks = 6;
     int num_elements = num_elements_per_task * num_tasks;
     int num_bulk_task_launches = 2;
 

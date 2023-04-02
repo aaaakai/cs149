@@ -2,6 +2,12 @@
 #define _TASKSYS_H
 
 #include "itasksys.h"
+#include "atomic"
+#include "thread"
+#include "vector"
+#include "mutex"
+#include "condition_variable"
+#include "iostream"
 
 /*
  * TaskSystemSerial: This class is the student's implementation of a
@@ -68,6 +74,29 @@ class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+        void taskExec();
+
+    private:
+        struct bulkInfo_ {
+            IRunnable *task_;
+            std::vector<int> dependency_{};
+
+            int curTaskId_, numTasks_, taskDone_;
+
+            int bulkId;
+        };
+        int numThread_;
+        std::vector<std::thread> threadPool_;
+        std::vector<bulkInfo_> runableBulks_{}, unrunBulks_{};
+        std::vector<int> doneBulks_{};
+        int nextBulk_{};
+        int nextBulkToRun_{};
+        std::atomic<bool> stop_;
+        std::mutex Lock_;
+        std::condition_variable allocSig_, finishSig_;
+
+        void updateBulks_();
+        int findBulkToRun_();
 };
 
 #endif

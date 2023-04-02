@@ -2,6 +2,11 @@
 #define _TASKSYS_H
 
 #include "itasksys.h"
+#include "atomic"
+#include "thread"
+#include "vector"
+#include "mutex"
+#include "condition_variable"
 
 /*
  * TaskSystemSerial: This class is the student's implementation of a
@@ -34,6 +39,10 @@ class TaskSystemParallelSpawn: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+    private:
+        int num_thread;
+        std::atomic<int> task_id;
+
 };
 
 /*
@@ -51,6 +60,15 @@ class TaskSystemParallelThreadPoolSpinning: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+    private:
+        int numThread_;
+        int curTaskId_, numTasks_;
+        std::vector<std::thread> threadPool_;
+        IRunnable *task_;
+        std::atomic<bool> stop_;
+        std::atomic<int> taskDone_;
+        std::mutex lock_;
+
 };
 
 /*
@@ -68,6 +86,14 @@ class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+    private:
+        int numThread_;
+        int curTaskId_, numTasks_, taskDone_;
+        std::vector<std::thread> threadPool_;
+        IRunnable *task_;
+        std::atomic<bool> stop_;
+        std::mutex Lock_;
+        std::condition_variable allocSig_, finishSig_;
 };
 
 #endif

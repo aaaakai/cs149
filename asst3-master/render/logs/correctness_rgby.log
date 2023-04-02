@@ -1,0 +1,25 @@
+Rendering to 1024x1024 image
+Loaded scene with 4 circles
+Loaded scene with 4 circles
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 1 CUDA devices
+Device 0: NVIDIA GeForce GTX 1660 Ti
+   SMs:        24
+   Global mem: 5945 MB
+   CUDA Cap:   7.5
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Dumping frames to output_xxx.ppm
+Copying image data from device
+Wrote image file output_0000.ppm
+Copying image data from device
+***************** Correctness check passed **************************
+Clear:    0.0846 ms
+Advance:  0.0007 ms
+Render:   0.0065 ms
+Total:    0.0919 ms
+File IO:  62.2490 ms
+
+Overall:  0.0770 sec (note units are seconds)

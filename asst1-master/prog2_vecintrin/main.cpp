@@ -249,6 +249,42 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // Your solution should work for any value of
   // N and VECTOR_WIDTH, not just when VECTOR_WIDTH divides N
   //
+  __cs149_vec_float x, base, vmax;
+  __cs149_vec_int exp, intzeros, intones;
+  __cs149_vec_float result;
+  __cs149_vec_float zero = _cs149_vset_float(0.f);
+  __cs149_mask maskAll, maskClamp, maskNotClamp, maskExpPos;
+
+  vmax = _cs149_vset_float(9.999999f);
+  maskAll = _cs149_init_ones();
+  intzeros = _cs149_vset_int(0);
+  intones = _cs149_vset_int(1);
+
+  for(int i = 0; i < N; i += VECTOR_WIDTH){
+
+    maskAll = _cs149_init_ones();
+    intzeros = _cs149_vset_int(0);
+    intones = _cs149_vset_int(1);
+
+    maskClamp = _cs149_init_ones(0);
+
+    x = _cs149_vset_float(1.f);
+    _cs149_vload_float(base, values + i, maskAll);
+
+    _cs149_vload_int(exp, exponents + i, maskAll);
+
+    _cs149_vgt_int(maskExpPos, exp, intzeros, maskAll);
+
+    while(_cs149_cntbits(maskExpPos) > 0){
+      _cs149_vmult_float(x, x, base, maskExpPos);
+      _cs149_vsub_int(exp, exp, intones, maskAll);
+      _cs149_vgt_int(maskExpPos, exp, intzeros, maskAll);
+    }
+
+    _cs149_vgt_float(maskClamp, x, vmax, maskAll);
+    _cs149_vmove_float(x, vmax, maskClamp);
+    _cs149_vstore_float(output + i, x, maskAll);
+  }
   
 }
 

@@ -27,6 +27,24 @@ static inline int nextPow2(int n) {
     return n;
 }
 
+__global__ void upsweep_kernel(int *output, int two_dplus1)
+{
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idnex % two_dplus1 == 0) {
+        output[index + two_dplus1 - 1] += output[index + two_dplus1/2 - 1];
+    }
+}
+
+__global__ void downsweep_kernel(int *output, int two_dplus1)
+{
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idnex % two_dplus1 == 0) {
+        int t = output[index + two_dplus1/2 - 1];
+        output[index + two_dplus1/2 - 1] = output[index + two_dplus1 - 1];
+        output[index + two_dplus1 - 1] += t;
+    }
+}
+
 // exclusive_scan --
 //
 // Implementation of an exclusive scan on global memory array `input`,
@@ -53,7 +71,23 @@ void exclusive_scan(int* input, int N, int* result)
     // on the CPU.  Your implementation will need to make multiple calls
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
+    int Nround = nextPow2(N);
+    const int blocks = (Nround + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    int zero = 0;
 
+    // upsweep phase
+    for (int two_d = 1; two_d <= N/2; two_d*=2) {
+        int two_dplus1 = 2*two_d;
+        upsweep_kernel<<<blocks, THREADS_PER_BLOCK>>>(result, two_dplus1);
+    }
+
+    cudaMemcpy(result + N - 1, &zero, sizeof(int), cudaMemcpyHostToDevice);
+
+    // downsweep phase
+    for (int two_d = N/2; two_d >= 1; two_d /= 2) {
+        int two_dplus1 = 2*two_d;
+        downsweep_kernel<<<blocks, THREADS_PER_BLOCK>>>(result, two_dplus1);
+    }
 
 }
 
@@ -141,6 +175,25 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 }
 
 
+__global__ void 
+findrep_kernel(int* device_input, int length, int *device_repindex){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if(index < length - 1){
+        device_repindex[index] = (device_input[index] == device_input[index = 1]) ? 1 : 0;
+    } else if (idnex == length - 1) {
+        device_repindex[index] = 0;
+    }
+}
+
+__global__ void 
+count_kernel(int* device_input, int length, int *device_output, int *device_repindex){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if(index < length - 1 && device_input[index] == device_input[index = 1]) {
+        device_output[device_repindex[index]] = index;
+    }
+}
 // find_repeats --
 //
 // Given an array of integers `device_input`, returns an array of all
@@ -161,7 +214,25 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // must ensure that the results of find_repeats are correct given
     // the actual array length.
 
-    return 0; 
+    int N = nextPow2(length);
+    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    int ret;
+
+    int *device_repindex;
+
+    cudaMalloc((void **)&device_repindex, sizeof(int) * N);
+
+    findrep_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_input, length, device_repindex);
+
+    exclusive_scan(device_repindex, length, device_repindex);
+
+    count_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_input, length, device_output, device_repindex);
+
+    cudaMemcpy(&ret, device_repindex + length - 1, sizeof(int));
+
+    cudaFree(device_repindex);
+
+    return ret; 
 }
 
 

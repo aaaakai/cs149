@@ -161,6 +161,8 @@ The starter code provides you a working serial implementation of the task system
 
 * Are there shared variables (internal state of your task execution system) that you need to protect from simultaneous access from multiple threads?  You may wish to review our [C++ synchronization tutorial](tutorial/README.md) for more information on the synchronization primitives in the C++ standard library.
 
+  
+
 #### Step 2: Avoid Frequent Thread Creation Using a Thread Pool ####
 
 __In this step please implement the class `TaskSystemParallelThreadPoolSpinning`.__
@@ -185,6 +187,8 @@ In this part of the assignment, we want you to improve the efficiency of your ta
 
 * You might want to consider writing additional test cases to exercise your system.  __The assignment starter code includes the workloads that the grading script will use to grade the performance of your code, but we will also test the correctness of your implementation using a wider set of workloads that we are not providing in the starter code!__
 
+  ![Screenshot from 2023-03-22 23-20-55](/home/ubuntu/picture/Screenshot from 2023-03-22 23-20-55.png)
+
 ## Part B: Supporting Execution of Task Graphs
 
 In part B of the assignment you will extend your part A task system implementation to support the asynchronous launch of tasks that may have dependencies on previous tasks.  These inter-task dependencies create scheduling constraints that your task execution library must respect.
@@ -207,22 +211,22 @@ The calling thread can determine when the bulk task launch has actually complete
 `sync()` returns to the caller __only when the tasks associated with all prior bulk task launches have completed.__  For example, consider the following code:
 
     // assume taskA and taskB are valid instances of IRunnable...
-
+    
     std::vector<TaskID> noDeps;  // empty vector
-
+    
     ITaskSystem *t = new TaskSystem(num_threads);
-
+    
     // bulk launch of 4 tasks
     TaskID launchA = t->runAsyncWithDeps(taskA, 4, noDeps);
-
+    
     // bulk launch of 8 tasks
     TaskID launchB = t->runAsyncWithDeps(taskB, 8, noDeps);
-
+    
     // at this point tasks associated with launchA and launchB
     // may still be running
-
+    
     t->sync();
-
+    
     // at this point all 12 tasks associated with launchA and launchB
     // are guaranteed to have terminated
 
@@ -235,17 +239,17 @@ The second key detail of `runAsyncWithDeps()` is its third argument: a vector of
     std::vector<TaskID> noDeps;  // empty vector
     std::vector<TaskID> depOnA;
     std::vector<TaskID> depOnBC;
-
+    
     ITaskSystem *t = new TaskSystem(num_threads);
-
+    
     TaskID launchA = t->runAsyncWithDeps(taskA, 128, noDeps);
     depOnA.push_back(launchA);
-
+    
     TaskID launchB = t->runAsyncWithDeps(taskB, 2, depOnA);
     TaskID launchC = t->runAsyncWithDeps(taskC, 6, depOnA);
     depOnBC.push_back(launchB);
     depOnBC.push_back(launchC);
-
+    
     TaskID launchD = t->runAsyncWithDeps(taskD, 32, depOnBC);
     t->sync();
 

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <omp.h>
 #include <utility>
+#include <vector>
 
 #include "../common/CycleTimer.h"
 #include "../common/graph.h"
@@ -25,9 +26,17 @@ void pageRank(Graph g, double* solution, double damping, double convergence)
 
   int numNodes = num_nodes(g);
   double equal_prob = 1.0 / numNodes;
-  for (int i = 0; i < numNodes; ++i) {
-    solution[i] = equal_prob;
+  double *score_old = (double *)malloc(sizeof(double) * numNodes);
+  double *score_new = (double *)malloc(sizeof(double) * numNodes);
+  std::vector<Vertex> noOutgoing{};
+  double global_diff = 0.f;
+  for (Vertex i = 0; i < numNodes; ++i) {
+    score_old[i] = equal_prob;
+    if (outgoing_size(g, i) == 0) {
+      noOutgoing.emplace_back(i);
+    }
   }
+  bool converged = false;
   
   
   /*
@@ -58,4 +67,36 @@ void pageRank(Graph g, double* solution, double damping, double convergence)
      }
 
    */
+  while(!converged) {
+    double noOutgoingSum = 0;
+    #pragma omp parallel for reduction(+:noOutgoingSum)
+    for (Vertex &v : noOutgoing) {
+      noOutgoingSum += damping * score_old[v] / g->num_nodes;
+    }
+
+    #pragma omp parallel for 
+    for (Vertex vi = 0; vi < numNodes; vi++) {
+      score_new[vi] = 0;
+      const Vertex *incomeBeg = incoming_begin(g, vi), *incomeEnd = incoming_end(g, vi);
+      for (const Vertex *vj = incomeBeg; vj < incomeEnd; vj++) {
+        score_new[vi] += score_old[*vj] / outgoing_size(g, *vj);
+      }
+
+      score_new[vi] = (damping * score_new[vi]) + (1.0-damping) / numNodes;
+
+      score_new[vi] += noOutgoingSum;
+    }
+
+    global_diff = 0.f;
+    #pragma omp parallel for reduction(+:global_diff)
+    for (Vertex vi = 0; vi < numNodes; vi++) {
+      global_diff += abs(score_new[vi] - score_old[vi]);
+    }
+    converged = (global_diff < convergence);
+    memcpy(score_old, score_new, sizeof(double) * numNodes);
+  }
+
+  memcpy(solution, score_new, sizeof(double) * numNodes);
+  free(score_new);
+  free(score_old);
 }

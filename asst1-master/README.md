@@ -83,27 +83,59 @@ You will not need to make use of any other std::thread API calls in this assignm
 
 **What you need to do:**
 
-1.  Modify the starter code to parallelize the Mandelbrot generation using 
- two processors. Specifically, compute the top half of the image in
-  thread 0, and the bottom half of the image in thread 1. This type
-    of problem decomposition is referred to as _spatial decomposition_ since
-  different spatial regions of the image are computed by different processors.
-2.  Extend your code to use 2, 3, 4, 5, 6, 7, and 8 threads, partitioning the image
-  generation work accordingly (threads should get blocks of the image). Note that the processor only has four cores but each
-  core supports two hyper-threads, so it can execute a total of eight threads interleaved on its execution contents.
-  In your write-up, produce a graph of __speedup compared to the reference sequential implementation__ as a function of the number of threads used __FOR VIEW 1__. Is speedup linear in the number of threads used? In your writeup hypothesize why this is (or is not) the case? (you may also wish to produce a graph for VIEW 2 to help you come up with a good answer. Hint: take a careful look at the three-thread datapoint.)
-3.  To confirm (or disprove) your hypothesis, measure the amount of time
-  each thread requires to complete its work by inserting timing code at
-  the beginning and end of `workerThreadStart()`. How do your measurements
-  explain the speedup graph you previously created?
-4.  Modify the mapping of work to threads to achieve to improve speedup to
-  at __about 7-8x on both views__ of the Mandelbrot set (if you're above 7x that's fine, don't sweat it). You may not use any
-  synchronization between threads in your solution. We are expecting you to come up with a single work decomposition policy that will work well for all thread counts---hard coding a solution specific to each configuration is not allowed! (Hint: There is a very simple static
-  assignment that will achieve this goal, and no communication/synchronization
-  among threads is necessary.). In your writeup, describe your approach to parallelization
-  and report the final 8-thread speedup obtained. 
+1. Modify the starter code to parallelize the Mandelbrot generation using 
+    two processors. Specifically, compute the top half of the image in
+     thread 0, and the bottom half of the image in thread 1. This type
+   of problem decomposition is referred to as _spatial decomposition_ since
+     different spatial regions of the image are computed by different processors.
+
+2. Extend your code to use 2, 3, 4, 5, 6, 7, and 8 threads, partitioning the image
+     generation work accordingly (threads should get blocks of the image). Note that the processor only has four cores but each
+     core supports two hyper-threads, so it can execute a total of eight threads interleaved on its execution contents.
+     In your write-up, produce a graph of __speedup compared to the reference sequential implementation__ as a function of the number of threads used __FOR VIEW 1__. Is speedup linear in the number of threads used? In your writeup hypothesize why this is (or is not) the case? (you may also wish to produce a graph for VIEW 2 to help you come up with a good answer. Hint: take a careful look at the three-thread datapoint.)
+
+   ![Screenshot from 2023-03-20 20-32-58](/home/ubuntu/picture/Screenshot from 2023-03-20 20-32-58.png)
+
+   ![Screenshot from 2023-03-20 20-41-22](/home/ubuntu/picture/Screenshot from 2023-03-20 20-41-22.png)
+
+   4 2.44
+
+   5 2.51
+
+   6 3.27
+
+   7 3.43
+
+   8 3.94
+
+   uniformly distribute the workload, 8 thread acc rate reaches 4.81
+
+   but 5 thread is 4.91 and 6 thread is 5.77
+
+   that is because my cpu is i5 9400h and only has 6 core
+
+3. To confirm (or disprove) your hypothesis, measure the amount of time
+     each thread requires to complete its work by inserting timing code at
+     the beginning and end of `workerThreadStart()`. How do your measurements
+     explain the speedup graph you previously created?
+
+4. Modify the mapping of work to threads to achieve to improve speedup to
+     at __about 7-8x on both views__ of the Mandelbrot set (if you're above 7x that's fine, don't sweat it). You may not use any
+     synchronization between threads in your solution. We are expecting you to come up with a single work decomposition policy that will work well for all thread counts---hard coding a solution specific to each configuration is not allowed! (Hint: There is a very simple static
+     assignment that will achieve this goal, and no communication/synchronization
+     among threads is necessary.). In your writeup, describe your approach to parallelization
+     and report the final 8-thread speedup obtained. 
+
+   ![Screenshot from 2023-03-20 21-05-44](/home/ubuntu/picture/Screenshot from 2023-03-20 21-05-44.png)
+
+   ##### uniformly distribute the workload, 8 thread acc rate reaches 4.81
+
+   ##### but 5 thread is 4.91 and 6 thread is 5.77
+
+   ##### that is because my cpu is i5 9400h and only has 6 core
+
 5. Now run your improved code with 16 threads. Is performance noticably greater than when running with eight threads? Why or why not? 
-  
+
 ## Program 2: Vectorizing Code Using SIMD Intrinsics (20 points) ##
 
 Take a look at the function `clampedExpSerial` in `prog2_vecintrin/main.cpp` of the
@@ -133,12 +165,16 @@ shows the percentage of vector lanes that are enabled.
 
 **What you need to do:**
 
-1.  Implement a vectorized version of `clampedExpSerial` in `clampedExpVector` . Your implementation 
-should work with any combination of input array size (`N`) and vector width (`VECTOR_WIDTH`). 
-2.  Run `./myexp -s 10000` and sweep the vector width from 2, 4, 8, to 16. Record the resulting vector 
-utilization. You can do this by changing the `#define VECTOR_WIDTH` value in `CS149intrin.h`. 
-Does the vector utilization increase, decrease or stay the same as `VECTOR_WIDTH` changes? Why?
-3.  _Extra credit: (1 point)_ Implement a vectorized version of `arraySumSerial` in `arraySumVector`. Your implementation may assume that `VECTOR_WIDTH` is a factor of the input array size `N`. Whereas the serial implementation has `O(N)` span, your implementation should have at most `O(N / VECTOR_WIDTH + log2(VECTOR_WIDTH))` span.  You may find the `hadd` and `interleave` operations useful.
+1. Implement a vectorized version of `clampedExpSerial` in `clampedExpVector` . Your implementation 
+   should work with any combination of input array size (`N`) and vector width (`VECTOR_WIDTH`). 
+
+2. Run `./myexp -s 10000` and sweep the vector width from 2, 4, 8, to 16. Record the resulting vector 
+   utilization. You can do this by changing the `#define VECTOR_WIDTH` value in `CS149intrin.h`. 
+   Does the vector utilization increase, decrease or stay the same as `VECTOR_WIDTH` changes? Why?
+
+3. _Extra credit: (1 point)_ Implement a vectorized version of `arraySumSerial` in `arraySumVector`. Your implementation may assume that `VECTOR_WIDTH` is a factor of the input array size `N`. Whereas the serial implementation has `O(N)` span, your implementation should have at most `O(N / VECTOR_WIDTH + log2(VECTOR_WIDTH))` span.  You may find the `hadd` and `interleave` operations useful.
+
+   ![Screenshot from 2023-03-21 00-28-26](/home/ubuntu/picture/Screenshot from 2023-03-21 00-28-26.png)
 
 ## Program 3: Parallel Fractal Generation Using ISPC (20 points) ##
 
@@ -199,11 +235,11 @@ following ISPC code:
     float a[TOTAL_VALUES];
     float b[TOTAL_VALUES];
     float c[TOTAL_VALUES]
- 
+     
     // Initialize arrays a and b here.
      
     sum(TOTAL_VALUES, a, b, c);
- 
+     
     // Upon return from sumArrays, result of a + b is stored in c.
 
 The corresponding ISPC code:
@@ -257,18 +293,20 @@ the foreach loop to yield a more straightforward implementation.
 **What you need to do:**
 
 1.  Compile and run the program mandelbrot ispc. __The ISPC compiler is currently configured to emit 8-wide AVX2 vector instructions.__  What is the maximum
-  speedup you expect given what you know about these CPUs?
-  Why might the number you observe be less than this ideal? (Hint:
-  Consider the characteristics of the computation you are performing?
-  Describe the parts of the image that present challenges for SIMD
-  execution? Comparing the performance of rendering the different views
-  of the Mandelbrot set may help confirm your hypothesis.).  
+    speedup you expect given what you know about these CPUs?
+    Why might the number you observe be less than this ideal? (Hint:
+    Consider the characteristics of the computation you are performing?
+    Describe the parts of the image that present challenges for SIMD
+    execution? Comparing the performance of rendering the different views
+    of the Mandelbrot set may help confirm your hypothesis.).  
 
   We remind you that for the code described in this subsection, the ISPC
   compiler maps gangs of program instances to SIMD instructions executed
   on a single core. This parallelization scheme differs from that of
   Program 1, where speedup was achieved by running threads on multiple
   cores.
+
+![Screenshot from 2023-03-21 15-42-10](/home/ubuntu/picture/Screenshot from 2023-03-21 15-42-10.png)
 
 If you look into detailed technical material about the CPUs in the myth machines, you will find there are a complicated set of rules about how many scalar and vector instructions can be run per clock.  For the purposes of this assignment, you can assume that there are about as many 8-wide vector execution units as there are scalar execution units for floating point math.   
 
@@ -290,23 +328,31 @@ different CPU cores).
 
 **What you need to do:**
 
-1.  Run `mandelbrot_ispc` with the parameter `--tasks`. What speedup do you
-  observe on view 1? What is the speedup over the version of `mandelbrot_ispc` that
-  does not partition that computation into tasks?
-2.  There is a simple way to improve the performance of
-  `mandelbrot_ispc --tasks` by changing the number of tasks the code
-  creates. By only changing code in the function
-  `mandelbrot_ispc_withtasks()`, you should be able to achieve
-  performance that exceeds the sequential version of the code by over 32 times!
-  How did you determine how many tasks to create? Why does the
-  number you chose work best?
-3.  _Extra Credit: (2 points)_ What are differences between the thread
-  abstraction (used in Program 1) and the ISPC task abstraction? There
-  are some obvious differences in semantics between the (create/join
-  and (launch/sync) mechanisms, but the implications of these differences
-  are more subtle. Here's a thought experiment to guide your answer: what
-  happens when you launch 10,000 ISPC tasks? What happens when you launch
-  10,000 threads? (For this thought experiment, please discuss in the general case
+1. Run `mandelbrot_ispc` with the parameter `--tasks`. What speedup do you
+     observe on view 1? What is the speedup over the version of `mandelbrot_ispc` that
+     does not partition that computation into tasks?
+
+   ![Screenshot from 2023-03-21 15-53-51](/home/ubuntu/picture/Screenshot from 2023-03-21 15-53-51.png)
+
+2. There is a simple way to improve the performance of
+     `mandelbrot_ispc --tasks` by changing the number of tasks the code
+     creates. By only changing code in the function
+     `mandelbrot_ispc_withtasks()`, you should be able to achieve
+     performance that exceeds the sequential version of the code by over 32 times!
+     How did you determine how many tasks to create? Why does the
+     number you chose work best?
+
+   4 tasks ![Screenshot from 2023-03-21 15-56-21](/home/ubuntu/picture/Screenshot from 2023-03-21 15-56-21.png)
+
+   5 tasks ![Screenshot from 2023-03-21 15-57-20](/home/ubuntu/picture/Screenshot from 2023-03-21 15-57-20.png)
+
+3. _Extra Credit: (2 points)_ What are differences between the thread
+     abstraction (used in Program 1) and the ISPC task abstraction? There
+     are some obvious differences in semantics between the (create/join
+     and (launch/sync) mechanisms, but the implications of these differences
+     are more subtle. Here's a thought experiment to guide your answer: what
+     happens when you launch 10,000 ISPC tasks? What happens when you launch
+     10,000 threads? (For this thought experiment, please discuss in the general case
   - i.e. don't tie your discussion to this given mandelbrot program.)
 
 _The smart-thinking student's question_: Hey wait! Why are there two different
@@ -335,21 +381,38 @@ Note: This problem is a review to double-check your understanding, as it covers 
 
 **What you need to do:**
 
-1.  Build and run `sqrt`. Report the ISPC implementation speedup for 
-  single CPU core (no tasks) and when using all cores (with tasks). What 
-  is the speedup due to SIMD parallelization? What is the speedup due to 
-  multi-core parallelization?
-2.  Modify the contents of the array values to improve the relative speedup 
-  of the ISPC implementations. Construct a specifc input that __maximizes speedup over the sequential version of the code__ and report the resulting speedup achieved (for both the with- and without-tasks ISPC implementations). Does your modification improve SIMD speedup?
-  Does it improve multi-core speedup (i.e., the benefit of moving from ISPC without-tasks to ISPC with tasks)? Please explain why.
-3.  Construct a specific input for `sqrt` that __minimizes speedup for ISPC (without-tasks) over the sequential version of the code__. Describe this input, describe why you chose it, and report the resulting relative performance of the ISPC implementations. What is the reason for the loss in efficiency? 
-    __(keep in mind we are using the `--target=avx2` option for ISPC, which generates 8-wide SIMD instructions)__. 
-4.  _Extra Credit: (up to 2 points)_ Write your own version of the `sqrt` 
- function manually using AVX2 intrinsics. To get credit your 
-    implementation should be nearly as fast (or faster) than the binary 
-    produced using ISPC. You may find the [Intel Intrinsics Guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/) 
-    very helpful.
- 
+1. Build and run `sqrt`. Report the ISPC implementation speedup for 
+     single CPU core (no tasks) and when using all cores (with tasks). What 
+     is the speedup due to SIMD parallelization? What is the speedup due to 
+     multi-core parallelization?
+
+   ![Screenshot from 2023-03-21 16-01-01](/home/ubuntu/picture/Screenshot from 2023-03-21 16-01-01.png)
+
+2. Modify the contents of the array values to improve the relative speedup 
+     of the ISPC implementations. Construct a specifc input that __maximizes speedup over the sequential version of the code__ and report the resulting speedup achieved (for both the with- and without-tasks ISPC implementations). Does your modification improve SIMD speedup?
+     Does it improve multi-core speedup (i.e., the benefit of moving from ISPC without-tasks to ISPC with tasks)? Please explain why.
+
+   ![Screenshot from 2023-03-21 16-40-25](/home/ubuntu/picture/Screenshot from 2023-03-21 16-40-25.png)
+
+   ##### change all values to 2.9, so all the parallel data exec use the same time and minimizes the cost in task alloc cost
+
+3. Construct a specific input for `sqrt` that __minimizes speedup for ISPC (without-tasks) over the sequential version of the code__. Describe this input, describe why you chose it, and report the resulting relative performance of the ISPC implementations. What is the reason for the loss in efficiency? 
+   __(keep in mind we are using the `--target=avx2` option for ISPC, which generates 8-wide SIMD instructions)__. 
+
+   ##### when set all values to 1.f, all ispc version's speedup is low due to high cost from task alloc cost
+
+   ![Screenshot from 2023-03-21 16-45-01](/home/ubuntu/picture/Screenshot from 2023-03-21 16-45-01.png)
+
+   ##### when set every 7 values to 1.f and 1 value to 2.9f, ispc without-tasks is even lower than sequential ver because 2.9f mask the performance of other data flow
+
+   ![Screenshot from 2023-03-21 16-44-50](/home/ubuntu/picture/Screenshot from 2023-03-21 16-44-50.png)
+
+4. _Extra Credit: (up to 2 points)_ Write your own version of the `sqrt` 
+    function manually using AVX2 intrinsics. To get credit your 
+   implementation should be nearly as fast (or faster) than the binary 
+   produced using ISPC. You may find the [Intel Intrinsics Guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/) 
+   very helpful.
+
 ## Program 5: BLAS `saxpy` (10 points) ##
 
 Program 5 is an implementation of the saxpy routine in the BLAS (Basic Linear
@@ -361,14 +424,20 @@ elements used. `saxpy` is a *trivially parallelizable computation* and features 
 
 **What you need to do:**
 
-1.  Compile and run `saxpy`. The program will report the performance of
-  ISPC (without tasks) and ISPC (with tasks) implementations of saxpy. What 
-  speedup from using ISPC with tasks do you observe? Explain the performance of this program.
-  Do you think it can be substantially improved? (For example, could you rewrite the code to achieve near linear speedup? Yes or No? Please justify your answer.)
+1. Compile and run `saxpy`. The program will report the performance of
+       ISPC (without tasks) and ISPC (with tasks) implementations of saxpy. What 
+       speedup from using ISPC with tasks do you observe? Explain the performance of this program.
+       Do you think it can be substantially improved? (For example, could you rewrite the code to achieve near linear speedup? Yes or No? Please justify your answer.)
+
+     ![Screenshot from 2023-03-21 16-55-09](/home/ubuntu/picture/Screenshot from 2023-03-21 16-55-09.png)
+
+     ##### infact there is no improve because task allocation cost and memory access limit the multi thread performan as compute workload is not heavy compared to load/store
+
 2. __Extra Credit:__ (1 point) Note that the total memory bandwidth consumed computation in `main.cpp` is `TOTAL_BYTES = 4 * N * sizeof(float);`.  Even though `saxpy` loads one element from X, one element from Y, and writes one element to `result` the multiplier by 4 is correct.  Why is this the case? (Hint, think about how CPU caches work.)
+
 3. __Extra Credit:__ (points handled on a case-by-case basis) Improve the performance of `saxpy`.
-  We're looking for a significant speedup here, not just a few percentage 
-  points. If successful, describe how you did it and what a best-possible implementation on these systems might achieve. Also, if successful, come tell the staff, we'll be interested. ;-)
+     We're looking for a significant speedup here, not just a few percentage 
+       points. If successful, describe how you did it and what a best-possible implementation on these systems might achieve. Also, if successful, come tell the staff, we'll be interested. ;-)
 
 Notes: Some students have gotten hung up on this question (thinking too hard) in the past. We expect a simple answer, but the results from running this problem might trigger more questions in your head.  Feel encouraged to come talk to the staff.
 
@@ -386,12 +455,13 @@ In the starter code you have been given a correct implementation of the K-means 
 2.  Run `pip install -r requirements.txt` to download the necessary plotting packages. Next, try running `python3 plot.py` which will generate the files "start.png" and "end.png" from the logs ("start.log" and "end.log") generated from running `kmeans`. These files will be in the current directory and should look similar to the above images. __Warning: You might notice that not all points are assigned to the "closest" centroid. This is okay.__ (For those that want to understand why: We project 100-dimensional datapoints down to 2-D using [PCA](https://en.wikipedia.org/wiki/Principal_component_analysis) to produce these visualizations. Therefore, while the 100-D datapoint is near the appropriate centroid in high dimensional space, the projects of the datapoint and the centroid may not be close to each other in 2-D.). As long as the clustering looks "reasonable" (use the images produced by the starter code in step 2 as a reference) and most points appear to be assigned to the clostest centroid, the code remains correct.
 3.  Utilize the timing function in `common/CycleTimer.h` to determine where in the code there are performance bottlenecks. You will need to call `CycleTimer::currentSeconds()`, which returns the current time (in seconds) as a floating point number. Where is most of the time being spent in the code?
 4.  Based on your findings from the previous step, improve the implementation. We are looking for a speedup of about 2.1x or more (i.e $\frac{oldRuntime}{newRuntime} >= 2.1$). Please explain how you arrived at your solution, as well as what your final solution is and the associated speedup. The writeup of this process should describe a sequence of steps. We expect something of the form "I measured ... which let me to believe X. So to improve things I tried ... resulting in a speedup/slowdown of ...".
-  
+
 Constraints:
 - You may only modify code in `kmeansThread.cpp`. You are not allowed to modify the `stoppingConditionMet` function and you cannot change the interface to `kMeansThread`, but anything is fair game (e.g. you can add new members to the `WorkerArgs` struct, rewrite functions, allocate new arrays, etc.). However...
 - **Make sure you do not change the functionality of the implementation! If the algorithm doesn't converge or the result from running `python3 plot.py` does not look like what's produced by the starter code, something is wrong!** For example, you cannot simply remove the main "while" loop or change the semantics of the `dist` function, since this would yield incorrect results.
 - __Important:__ you may only parallelize __one__ of the following functions: `dist`, `computeAssignments`, `computeCentroids`, `computeCost`. For an example of how to write parallel code using `std::thread`, see `prog1_mandelbrot_threads/mandelbrotThread.cpp`.
   
+
 Tips / Notes: 
 - This problem should not require a significant amount of coding. Our solution modified/added around 20-25 lines of code.
 - Once you've used timers to isolate hotspots, to improve the code make sure you understand the relative sizes of K, M, and N.
